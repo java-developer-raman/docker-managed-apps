@@ -34,7 +34,8 @@ services:
       - elk_net
   kibana:
     image: docker.elastic.co/kibana/kibana:6.7.1
-    depends_on: elasticsearch
+    depends_on:
+     - elasticsearch
     environment:
       SERVER_NAME: kibana
       ELASTICSEARCH_HOSTS: http://elasticsearch:9200
@@ -51,7 +52,8 @@ services:
       - elk_net
   logstash:
     image: ramansharma/logstash:6.7.1
-    depends_on: elasticsearch
+    depends_on:
+     - elasticsearch
     deploy:
       mode: replicated # It tells that each node in swarm can have many containers, global : means each node will have only one container
       replicas: 1

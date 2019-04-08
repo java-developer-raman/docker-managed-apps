@@ -16,10 +16,29 @@ version: '3.7'
 services:
   app:
     image: ramansharma/einwohnertomcat:v0.0.1
+    # As per metricbeat documentation these volumes are required to map to collect information about host os in which docker is running
+    # https://www.elastic.co/guide/en/beats/metricbeat/current/running-on-docker.html
+    volumes:
+     - type: bind
+       source: /proc
+       target: /hostfs/proc
+       read_only: true
+     - type: bind
+       source: /sys/fs/cgroup
+       target: /hostfs/sys/fs/cgroup
+       read_only: true
+     - type: bind
+       source: /sys/fs/cgroup
+       target: /hostfs/sys/fs/cgroup
+       read_only: true
+     - type: bind
+       source: /
+       target: /hostfs
+       read_only: true
     deploy:
       endpoint_mode: vip # Set up a virtual ip which can be used to connect to cluster
       mode: replicated # It tells that each node in swarm can have many containers, global : means each node will have only one container
-      replicas: 3
+      replicas: 1
       restart_policy:
         condition: on-failure
         delay: 5s
@@ -28,6 +47,8 @@ services:
       - '8080:8080'
     networks:
       - einwohner_net
+      - elk_elk_net
+      - host
   # This image is to get a view of containers in UI
   visualizer:
     image: dockersamples/visualizer:stable
@@ -42,3 +63,7 @@ services:
       - einwohner_net
 networks:
   einwohner_net:
+  elk_elk_net:
+    external: true
+  host:
+    external: true
