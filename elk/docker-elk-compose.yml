@@ -1,0 +1,70 @@
+# Startup
+# 1. sudo docker swarm init --advertise-addr 192.168.2.104
+# 2. sudo docker swarm join <token>
+# 3. sudo docker node ls
+# 4. sudo docker stack deploy -c docker-elk-compose.yml elk
+# 5. sudo docker service ls
+
+# Shutdown
+# 1. sudo docker service scale einwohner_app=0
+# 2. sudo docker service scale einwohner_db=0
+# 3. sudo docker stack rm einwohner
+# 4. docker swarm leave --force
+# command: sh -c '/usr/local/tomcat/bin/wait-for.sh db:3306 -- catalina.sh run'
+
+version: '3.7'
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.7.1
+    environment:
+      - discovery.type=single-node
+    deploy:
+      mode: replicated # It tells that each node in swarm can have many containers, global : means each node will have only one container
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+    ports:
+      - '9200:9200'
+      - '9300:9300'
+    volumes:
+      - esdata1:/usr/share/elasticsearch/data
+    networks:
+      - elk_net
+  kibana:
+    image: docker.elastic.co/kibana/kibana:6.7.1
+    depends_on: elasticsearch
+    environment:
+      SERVER_NAME: kibana
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+    deploy:
+      mode: replicated # It tells that each node in swarm can have many containers, global : means each node will have only one container
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+    ports:
+      - '5601:5601'
+    networks:
+      - elk_net
+  logstash:
+    image: ramansharma/logstash:6.7.1
+    depends_on: elasticsearch
+    deploy:
+      mode: replicated # It tells that each node in swarm can have many containers, global : means each node will have only one container
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+    ports:
+      - '5044:5044'
+    networks:
+      - elk_net
+volumes:
+  esdata1:
+    driver: local
+networks:
+  elk_net:

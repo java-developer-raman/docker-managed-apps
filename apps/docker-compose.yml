@@ -1,0 +1,44 @@
+# Startup
+# 1. sudo docker swarm init --advertise-addr 192.168.2.104
+# 2. sudo docker swarm join <token>
+# 3. sudo docker node ls
+# 4. sudo docker stack deploy -c docker-compose.yml einwohner
+# 5. sudo docker service ls
+
+# Shutdown
+# 1. sudo docker service scale einwohner_app=0
+# 2. sudo docker service scale einwohner_db=0
+# 3. sudo docker stack rm einwohner
+# 4. docker swarm leave --force
+# command: sh -c '/usr/local/tomcat/bin/wait-for.sh db:3306 -- catalina.sh run'
+
+version: '3.7'
+services:
+  app:
+    image: ramansharma/einwohnertomcat:v0.0.1
+    deploy:
+      endpoint_mode: vip # Set up a virtual ip which can be used to connect to cluster
+      mode: replicated # It tells that each node in swarm can have many containers, global : means each node will have only one container
+      replicas: 3
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+    ports:
+      - '8080:8080'
+    networks:
+      - einwohner_net
+  # This image is to get a view of containers in UI
+  visualizer:
+    image: dockersamples/visualizer:stable
+    ports:
+      - "8180:8080"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    deploy:
+      placement:
+        constraints: [node.role == manager]
+    networks:
+      - einwohner_net
+networks:
+  einwohner_net:
