@@ -1,0 +1,33 @@
+version: '3.7'
+
+services:
+  webapp:
+    image: nginx:1.16-alpine
+    deploy:
+      mode: replicated
+      replicas: 5
+    networks:
+      - load
+  lb:
+    image: lb:latest
+    depends_on:
+      - webapp
+    build:
+      context: .
+    ports:
+      - 80:80
+    networks:
+      - load
+    environment:
+      - PROXY_PROTOCOL=http
+      - PROXY_UPSTREAM=localhost
+  # This image or service can be used to interat with containers of service above by invoking
+  # docker-compose exec alpine sh
+  # Inside shell you can talk to containers e.g. ping webapp
+  alpine:
+    image: alpine:latest
+    stdin_open: true
+    tty: true
+    command: sh
+networks:
+  load:

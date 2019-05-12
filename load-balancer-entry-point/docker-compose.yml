@@ -1,0 +1,16 @@
+version: '3.7'
+
+services:
+  lb-entry-point:
+    image: lb-enty-point:latest
+    build:
+      context: .
+    ports:
+      - 80:80
+    networks:
+      - load
+    environment:
+      - PROXY_PROTOCOL=http
+      - PROXY_UPSTREAM=localhost
+networks:
+  load:

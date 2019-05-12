@@ -1,0 +1,6 @@
+version: '3.3'
+services:
+  app:
+    image: my_user_security:latest
+    build:
+      context: .
